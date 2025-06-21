@@ -18,7 +18,7 @@ function App() {
 
     fetchContext();
     // Optional: poll every few seconds
-    const interval = setInterval(fetchContext, 5000);
+    const interval = setInterval(fetchContext, 1000);
     return () => clearInterval(interval);
   }, []);
 
