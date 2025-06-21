@@ -1,49 +1,39 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+type SystemContext = {
+  app: string;
+  clipboard: string;
+};
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+function App() {
+  const [context, setContext] = useState<SystemContext | null>(null);
+
+  useEffect(() => {
+    const fetchContext = async () => {
+      const result = await invoke<SystemContext>("get_context");
+      setContext(result);
+    };
+
+    fetchContext();
+    // Optional: poll every few seconds
+    const interval = setInterval(fetchContext, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+      <h1 className="text-xl font-bold">System Context</h1>
 
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+      {context ? (
+        <div className="mt-4">
+          <p><strong>Active App:</strong> {context.app}</p>
+          <p><strong>Clipboard:</strong> {context.clipboard}</p>
+        </div>
+      ) : (
+        <p>Loading context...</p>
+      )}
     </main>
   );
 }
