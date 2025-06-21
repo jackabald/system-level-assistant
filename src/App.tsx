@@ -1,41 +1,26 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useAssistant } from "./hooks/useAssistant";
 import "./App.css";
 
-type SystemContext = {
-  app: string;
-  clipboard: string;
-};
-
-function App() {
-  const [context, setContext] = useState<SystemContext | null>(null);
-
-  useEffect(() => {
-    const fetchContext = async () => {
-      const result = await invoke<SystemContext>("get_context");
-      setContext(result);
-    };
-
-    fetchContext();
-    // Optional: poll every few seconds
-    const interval = setInterval(fetchContext, 1000);
-    return () => clearInterval(interval);
-  }, []);
+export default function App() {
+  const { ctx, reply } = useAssistant(5000); // poll every 5 s
 
   return (
     <main className="container">
-      <h1 className="text-xl font-bold">System Context</h1>
+      <h1 className="text-xl font-bold mb-4">System-Level Assistant</h1>
 
-      {context ? (
-        <div className="mt-4">
-          <p><strong>Active App:</strong> {context.app}</p>
-          <p><strong>Clipboard:</strong> {context.clipboard}</p>
+      {ctx && (
+        <div className="mb-6">
+          <p><strong>Active App:</strong> {ctx.app}</p>
+          <p><strong>Clipboard:</strong> {ctx.clipboard}</p>
         </div>
-      ) : (
-        <p>Loading context...</p>
+      )}
+
+      {reply && (
+        <div className="p-4 border rounded shadow">
+          <strong>Assistant&nbsp;Says:</strong>
+          <p className="mt-2">{reply}</p>
+        </div>
       )}
     </main>
   );
 }
-
-export default App;

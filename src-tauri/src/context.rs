@@ -8,10 +8,17 @@ pub struct SystemContext {
 }
 
 #[tauri::command]
-pub fn get_context() -> SystemContext {
-    let app = get_active_app();
-    let clipboard = get_clipboard_contents();
-    SystemContext { app, clipboard }
+pub async fn get_context() -> Result<SystemContext, String> {
+    // Use async runtime to spawn a blocking task for clipboard access
+    let context = tauri::async_runtime::spawn_blocking(move || {
+        let app = get_active_app();
+        let clipboard = get_clipboard_contents();
+        SystemContext { app, clipboard }
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(context)
 }
 
 fn get_active_app() -> String {
